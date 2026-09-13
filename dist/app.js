@@ -12,6 +12,12 @@ const soundLabel = document.querySelector('#sound-label');
 const motionLabel = document.querySelector('#motion-label');
 const chapterCount = document.querySelector('#chapter-count');
 const fallback = document.querySelector('.portrait-fallback');
+const storyIntro = document.querySelector('#story-intro');
+const beginButton = document.querySelector('#begin-story');
+const skipStoryButton = document.querySelector('#skip-story');
+const sceneTransition = document.querySelector('#scene-transition');
+const transitionLabel = document.querySelector('#transition-label');
+const storyButtons = [...document.querySelectorAll('.story-next')];
 let scene = null;
 let motion = !reduceMotion.matches;
 let scrollFrame = 0;
@@ -127,6 +133,93 @@ function createSoundEngine() {
 }
 
 const sound = createSoundEngine();
+let storyStarted = false;
+let transitioning = false;
+
+document.body.classList.add('story-locked');
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+history.replaceState(null, '', `${location.pathname}${location.search}`);
+window.scrollTo({ top: 0, behavior: 'auto' });
+requestAnimationFrame(() => beginButton.focus({ preventScroll: true }));
+
+function sceneDelay(normal, reduced = 80) {
+  return reduceMotion.matches ? reduced : normal;
+}
+
+function jumpTo(target) {
+  const previousBehavior = root.style.scrollBehavior;
+  root.style.scrollBehavior = 'auto';
+  window.scrollTo(0, target.offsetTop);
+  requestAnimationFrame(() => { root.style.scrollBehavior = previousBehavior; });
+}
+
+function advanceTo(targetId, label) {
+  if (transitioning) return;
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  transitioning = true;
+  document.body.classList.add('is-transitioning');
+  transitionLabel.textContent = label;
+  sceneTransition.hidden = false;
+  storyButtons.forEach(button => {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+  });
+  sound.burst();
+  requestAnimationFrame(() => sceneTransition.classList.add('is-active'));
+  setTimeout(() => {
+    history.replaceState(null, '', `#${targetId}`);
+    jumpTo(target);
+    updateScroll();
+  }, sceneDelay(570));
+  setTimeout(() => sceneTransition.classList.remove('is-active'), sceneDelay(1120, 140));
+  setTimeout(() => {
+    sceneTransition.hidden = true;
+    document.body.classList.remove('is-transitioning');
+    storyButtons.forEach(button => {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+    });
+    jumpTo(target);
+    updateScroll();
+    transitioning = false;
+  }, sceneDelay(1660, 220));
+}
+
+function beginStory(targetId = 'intro', label = '01 / INTRO') {
+  if (storyStarted) return;
+  storyStarted = true;
+  beginButton.disabled = true;
+  beginButton.classList.add('is-starting');
+  beginButton.querySelector('span').textContent = 'ENTERING';
+  sound.click();
+  setTimeout(() => storyIntro.classList.add('is-leaving'), sceneDelay(330, 0));
+  setTimeout(() => {
+    storyIntro.hidden = true;
+    document.body.classList.remove('story-locked');
+    if (targetId === 'intro') {
+      history.replaceState(null, '', '#intro');
+      jumpTo(document.getElementById('intro'));
+      scene?.burst();
+      updateScroll();
+    } else advanceTo(targetId, label);
+  }, sceneDelay(980, 20));
+}
+
+beginButton.addEventListener('click', () => beginStory());
+skipStoryButton.addEventListener('click', () => beginStory('projects', '03 / SELECTED WORK'));
+storyButtons.forEach(button => {
+  button.addEventListener('click', () => advanceTo(button.dataset.next, button.dataset.nextLabel));
+});
+navLinks.forEach(link => {
+  link.addEventListener('click', event => {
+    if (!storyIntro.hidden) return;
+    event.preventDefault();
+    const chapter = sections.findIndex(section => section.id === link.dataset.section);
+    const label = `${String(chapter + 1).padStart(2, '0')} / ${link.getAttribute('aria-label') || link.textContent}`;
+    advanceTo(link.dataset.section, label.toUpperCase());
+  });
+});
 
 function updateMotion() {
   document.body.classList.toggle('is-motion-paused', !motion);
