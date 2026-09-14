@@ -41,3 +41,6 @@
 .memory-canvas[data-active="0"] .node-remember,.memory-canvas[data-active="1"] .node-retrieve,.memory-canvas[data-active="2"] .node-reason,.memory-canvas[data-active="3"] .node-act{background:var(--sun);color:var(--ink);box-shadow:7px 7px 0 var(--forest-deep);transform:translate(-4px,-4px)}
 .memory-canvas[data-active="0"] .node-remember small,.memory-canvas[data-active="1"] .node-retrieve small,.memory-canvas[data-active="2"] .node-reason small,.memory-canvas[data-active="3"] .node-act small{color:var(--forest)}
 @media(max-width:700px){.memory-canvas{height:560px;margin-top:50px;box-shadow:7px 7px 0 var(--coral)}.memory-canvas::after{width:280px;height:280px}.memory-canvas-meta,.memory-canvas-foot{font-size:8px;left:12px;right:12px}.memory-core{width:138px;height:138px}.memory-core strong{font-size:21px}.memory-node{width:126px;padding:11px;grid-template-columns:22px 1fr;gap:2px 6px}.memory-node span{font-size:11px}.memory-node b,.memory-node small{font-size:8px}.node-remember{left:13px;top:80px}.node-retrieve{right:13px;top:80px}.node-reason{left:13px;bottom:70px}.node-act{right:13px;bottom:70px}.memory-threads i{width:38%}}
+
+.gate-card h1{margin-top:52px}
+@media(max-width:700px){.gate-card h1{margin-top:40px}}
